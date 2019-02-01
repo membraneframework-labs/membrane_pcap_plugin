@@ -1,6 +1,6 @@
 # Membrane Multimedia Framework: Pcap
 
-This package provides elements that can be used ...
+This package provides elements that can be used for streaming files in `pcap` format.
 
 It is part of [Membrane Multimedia Framework](https://membraneframework.org).
 
