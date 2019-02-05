@@ -17,13 +17,26 @@ defmodule Membrane.Element.Pcap.MixProject do
       source_url: @github_url,
       docs: docs(),
       homepage_url: "https://membraneframework.org",
-      deps: deps()
+      deps: deps(),
+      aliases: aliases(),
+      preferred_cli_env: [
+        "test.short": :test
+      ],
+      dialyzer: [
+        plt_add_apps: [:pkt]
+      ]
     ]
   end
 
   def application do
     [
       extra_applications: []
+    ]
+  end
+
+  def aliases do
+    [
+      "test.short": "test --exclude time_consuming:true"
     ]
   end
 
@@ -54,7 +67,8 @@ defmodule Membrane.Element.Pcap.MixProject do
       {:membrane_core, "~> 0.2.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},
-      {:expcap, github: "Hajto/expcap"}
+      {:expcap, github: "Hajto/expcap"},
+      {:mock, "~> 0.3.0", only: :test}
     ]
   end
 end
