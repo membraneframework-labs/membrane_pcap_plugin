@@ -34,28 +34,71 @@ defmodule Membrane.Element.Pcap.SourceTest do
     end
   end
 
-  test "Pcap Source element when parsing packet should return event end of stream when eof is sent as last action",
-       %{state: state} do
-    packets = Enum.map(1..3, fn elem -> {:ok, %ExPcap.Packet{parsed_packet_data: {[], elem}}} end)
-    {:ok, store} = Agent.start_link(fn -> packets ++ [{:ok, :eof}] end)
+  describe "Pcap Source element when handling demand should" do
+    setup do
+      base = 1..3
 
-    next_packet = fn _ ->
-      Agent.get_and_update(store, fn value ->
-        Enum.split(value, 1)
-        ~> ({[value], rest} -> {value, rest})
-      end)
+      packets =
+        Enum.map(base, fn elem -> {:ok, %ExPcap.Packet{parsed_packet_data: {[], elem}}} end)
+
+      {:ok, store} = Agent.start_link(fn -> packets ++ [{:ok, :eof}] end)
+
+      next_packet = fn _ ->
+        Agent.get_and_update(store, fn value ->
+          Enum.split(value, 1)
+          ~> ({[value], rest} -> {value, rest})
+        end)
+      end
+
+      [base: base, packets: packets, next_packet: next_packet, store: store]
     end
 
-    with_mock Parser, next_packet: next_packet do
-      assert {{:ok, actions}, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
-      assert length(actions) == 2
-      assert {:output, buffers} = Keyword.fetch!(actions, :buffer)
+    test "should return event end of stream when eof is sent as last action",
+         %{state: state, next_packet: next_packet, base: base} do
+      with_mock Parser, next_packet: next_packet do
+        assert {{:ok, actions}, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
+        assert length(actions) == 2
+        assert {:output, buffers} = Keyword.fetch!(actions, :buffer)
 
-      buffers
-      |> Enum.zip(1..3)
-      |> Enum.each(fn {left, right} -> assert left.payload == right end)
+        buffers
+        |> Enum.zip(base)
+        |> Enum.each(fn {left, right} -> assert left.payload == right end)
 
-      assert Keyword.fetch!(actions, :event) == {:output, %Membrane.Event.EndOfStream{}}
+        assert Keyword.fetch!(actions, :event) == {:output, %Membrane.Event.EndOfStream{}}
+      end
+    end
+
+    test "when all packets are ignored no buffers are sent",
+         %{state: state, next_packet: next_packet} do
+      ignore_all_transformer = fn _ -> nil end
+
+      with_mock Parser, next_packet: next_packet do
+        state = %Source.State{state | transformer: ignore_all_transformer}
+        assert {{:ok, actions}, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
+        refute Keyword.has_key?(actions, :buffer)
+        assert {:output, %Membrane.Event.EndOfStream{}} = Keyword.fetch!(actions, :event)
+      end
+    end
+
+    test "return buffers when they are not ignored", %{state: state, next_packet: next_packet} do
+      ignore_even_buffers = fn
+        %ExPcap.Packet{parsed_packet_data: {[], value}} ->
+          if rem(value, 2) == 0 do
+            %Membrane.Buffer{payload: value}
+          else
+            nil
+          end
+      end
+
+      with_mock Parser, next_packet: next_packet do
+        state = %Source.State{state | transformer: ignore_even_buffers}
+        assert {{:ok, actions}, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
+
+        assert actions == [
+                 buffer: {:output, [%Membrane.Buffer{metadata: %{}, payload: 2}]},
+                 event: {:output, %Membrane.Event.EndOfStream{}}
+               ]
+      end
     end
   end
 end

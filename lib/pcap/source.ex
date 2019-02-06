@@ -69,9 +69,11 @@ defmodule Membrane.Element.Pcap.Source do
   end
 
   @impl true
-  def handle_demand(:output, size, :buffers, _ctx, %State{parser: parser} = state) do
+  def handle_demand(:output, size, :buffers, _ctx, state) do
+    %State{parser: parser, transformer: transformer} = state
+
     size
-    |> fetch_next_packets(parser)
+    |> fetch_packets(parser, transformer)
     |> handle_fetched_packets(state)
   end
 
@@ -80,14 +82,30 @@ defmodule Membrane.Element.Pcap.Source do
     do: %Buffer{payload: payload}
 
   # Note: Will return buffers in reversed order
-  defp fetch_next_packets(count, parser) do
+  defp fetch_packets(count, parser, transformer) do
     Enum.reduce_while(1..count, [], fn _, acc ->
-      case @next_packet.(parser) do
-        {:error, _, _} = error -> {:halt, error}
-        {:ok, :eof} -> {:halt, [:eof | acc]}
-        {:ok, %Packet{} = packet} -> {:cont, [packet | acc]}
-      end
+      fetch_next_packet(parser, transformer, acc)
     end)
+  end
+
+  defp fetch_next_packet(parser, transformer, rest) do
+    case @next_packet.(parser) do
+      {:error, _, _} = error ->
+        {:halt, error}
+
+      {:ok, :eof} ->
+        {:halt, [:eof | rest]}
+
+      {:ok, %Packet{} = packet} ->
+        # TODO: Test this behaviour
+        case transformer.(packet) do
+          nil ->
+            fetch_next_packet(parser, transformer, rest)
+
+          buffer ->
+            {:cont, [buffer | rest]}
+        end
+    end
   end
 
   defp handle_fetched_packets(result, state)
@@ -95,22 +113,23 @@ defmodule Membrane.Element.Pcap.Source do
   defp handle_fetched_packets({:error, _, _} = error, state), do: {error, state}
 
   # Note: assumes packets are in reversed order
-  defp handle_fetched_packets(buffers, %State{transformer: transformer} = state) do
+  defp handle_fetched_packets(buffers, state) do
     buffers
-    |> pack_packets(transformer)
+    |> package_actions()
     |> Enum.reverse()
     ~> {{:ok, &1}, state}
   end
 
-  defp pack_packets(buffers, transformer) do
+  defp package_actions([:eof]), do: [event: {:output, %EndOfStream{}}]
+
+  defp package_actions(buffers) do
     Enum.reduce(buffers, [buffer: {:output, []}], fn
       :eof, acc ->
         [{:event, {:output, %EndOfStream{}}} | acc]
 
-      %Packet{} = packet, acc ->
+      %Buffer{} = buffer, acc ->
         Keyword.update(acc, :buffer, [], fn {:output, buffers} ->
-          transformer.(packet)
-          ~> {:output, [&1 | buffers]}
+          {:output, [buffer | buffers]}
         end)
     end)
   end
