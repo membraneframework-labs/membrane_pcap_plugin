@@ -15,6 +15,7 @@ defmodule Membrane.Element.Pcap.Source.PipelineTest do
   test "Pipeline does not crash when parsing big RTP Stream" do
     expected_count = 47_942
     file = "test/support/fixtures/rtp_video_stream.pcap"
+
     process_file(file, expected_count)
   end
 
@@ -36,5 +37,7 @@ defmodule Membrane.Element.Pcap.Source.PipelineTest do
     Enum.each(1..expected_packets, fn _el ->
       assert_receive %Membrane.Buffer{} = buffer, 1000
     end)
+
+    Membrane.Pipeline.stop(pid)
   end
 end

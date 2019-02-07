@@ -19,7 +19,7 @@ defmodule Membrane.Element.Pcap.Source do
 
   def_options packet_transformer: [
                 type: :function,
-                spec: (Packet.t() -> Buffer.t()),
+                spec: (Packet.t() -> Buffer.t() | nil),
                 default: &__MODULE__.default_transformer/1,
                 description: """
                 This function transforms parsed packet into a buffer.
@@ -74,63 +74,51 @@ defmodule Membrane.Element.Pcap.Source do
 
     size
     |> fetch_packets(parser, transformer)
-    |> handle_fetched_packets(state)
+    ~> (
+      {:error, _} = error ->
+        {error, state}
+
+      result ->
+        result
+        |> pack_fetched_packets()
+        ~> {{:ok, &1}, state}
+    )
   end
 
-  @spec default_transformer(any()) :: any()
+  @spec default_transformer(Packet.t()) :: Buffer.t()
   def default_transformer(%ExPcap.Packet{parsed_packet_data: {_, payload}}),
     do: %Buffer{payload: payload}
 
   # Note: Will return buffers in reversed order
-  defp fetch_packets(count, parser, transformer) do
-    Enum.reduce_while(1..count, [], fn _, acc ->
-      fetch_next_packet(parser, transformer, acc)
-    end)
-  end
+  defp fetch_packets(count, parser, transformer, acc \\ [])
+  defp fetch_packets(0, _, _, acc), do: acc
 
-  defp fetch_next_packet(parser, transformer, rest) do
+  defp fetch_packets(count, parser, transformer, acc) do
     case @next_packet.(parser) do
-      {:error, _, _} = error ->
-        {:halt, error}
+      {:error, _, _} ->
+        {:error, :unparsable_data}
 
       {:ok, :eof} ->
-        {:halt, [:eof | rest]}
+        {:eof, acc}
 
       {:ok, %Packet{} = packet} ->
-        # TODO: Test this behaviour
         case transformer.(packet) do
           nil ->
-            fetch_next_packet(parser, transformer, rest)
+            fetch_packets(count, parser, transformer, acc)
 
           buffer ->
-            {:cont, [buffer | rest]}
+            fetch_packets(count - 1, parser, transformer, [buffer | acc])
         end
     end
   end
 
-  defp handle_fetched_packets(result, state)
+  defp pack_fetched_packets(result)
 
-  defp handle_fetched_packets({:error, _, _} = error, state), do: {error, state}
+  defp pack_fetched_packets({:eof, []}), do: [event: {:output, %EndOfStream{}}]
 
-  # Note: assumes packets are in reversed order
-  defp handle_fetched_packets(buffers, state) do
-    buffers
-    |> package_actions()
-    |> Enum.reverse()
-    ~> {{:ok, &1}, state}
-  end
+  defp pack_fetched_packets({:eof, buffers}),
+    do: pack_fetched_packets(buffers) ++ pack_fetched_packets({:eof, []})
 
-  defp package_actions([:eof]), do: [event: {:output, %EndOfStream{}}]
-
-  defp package_actions(buffers) do
-    Enum.reduce(buffers, [buffer: {:output, []}], fn
-      :eof, acc ->
-        [{:event, {:output, %EndOfStream{}}} | acc]
-
-      %Buffer{} = buffer, acc ->
-        Keyword.update(acc, :buffer, [], fn {:output, buffers} ->
-          {:output, [buffer | buffers]}
-        end)
-    end)
-  end
+  defp pack_fetched_packets(buffers) when is_list(buffers),
+    do: buffers |> Enum.reverse() ~> [buffer: {:output, &1}]
 end
