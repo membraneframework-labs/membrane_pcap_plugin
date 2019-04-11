@@ -13,9 +13,8 @@ defmodule Membrane.Element.Pcap.Source do
 
   @next_packet &Parser.next_packet/1
 
-  def_output_pads output: [
-                    caps: :any
-                  ]
+  def_output_pad :output,
+    caps: :any
 
   def_options packet_transformer: [
                 type: :function,
