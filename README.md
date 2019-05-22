@@ -1,22 +1,24 @@
-# Membrane Multimedia Framework: Pcap
+# Membrane.Element.LiveAudioMixer
 
-This package provides elements that can be used for reading files in `pcap` format.
+## Warning: this element is experimental!
 
-It is part of [Membrane Multimedia Framework](https://membraneframework.org).
+The element is a simple mixer that combines audio from different sources.
+It is designed for use as a live source, meaning it will produce an audio stream
+even if some (or all) of the sources fail to provide enough data.
 
 ## Installation
 
-The package can be installed by adding `membrane_element_pcap` to your list of dependencies in `mix.exs`:
+Add the following line to your `deps` in `mix.exs`.  Run `mix deps.get`.
 
 ```elixir
 def deps do
   [
-    {:membrane_element_pcap, "~> 0.1.0"}
+    {:membrane_element_live_audiomixer, github: "membraneframework/membrane-element-live-audiomixer"}
   ]
 end
 ```
 
-The docs can be found at [HexDocs](https://hexdocs.pm/membrane_element_pcap).
+Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 
 ## Copyright and License
 
