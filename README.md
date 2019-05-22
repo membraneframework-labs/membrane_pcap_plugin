@@ -1,6 +1,6 @@
 # Membrane Multimedia Framework: Pcap
 
-This package provides elements that can be used ...
+This package provides elements that can be used for reading files in `pcap` format.
 
 It is part of [Membrane Multimedia Framework](https://membraneframework.org).
 
@@ -20,7 +20,7 @@ The docs can be found at [HexDocs](https://hexdocs.pm/membrane_element_pcap).
 
 ## Copyright and License
 
-Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+Copyright 2019, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
 
 [![Software Mansion](https://membraneframework.github.io/static/logo/swm_logo_readme.png)](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
 
