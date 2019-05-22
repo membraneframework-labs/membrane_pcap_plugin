@@ -1,5 +1,7 @@
 # Membrane Multimedia Framework: Pcap
 
+## Warning: this element is experimental!
+
 This package provides elements that can be used for reading files in `pcap` format.
 
 It is part of [Membrane Multimedia Framework](https://membraneframework.org).
