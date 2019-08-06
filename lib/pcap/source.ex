@@ -3,7 +3,7 @@ defmodule Membrane.Element.Pcap.Source do
   Element that reads subsequent packets from `pcap` file and sends them
   as buffers through the output pad.
   """
-  use Membrane.Element.Base.Source
+  use Membrane.Source
   use Bunch
 
   alias Membrane.Buffer
