@@ -1,5 +1,7 @@
 # Membrane Multimedia Framework: Pcap
 
+[![CircleCI](https://circleci.com/gh/membraneframework/membrane-element-pcap.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane-element-pcap)
+
 ## Warning: this element is experimental!
 
 This package provides elements that can be used for reading files in `pcap` format.
