@@ -1,8 +1,8 @@
 defmodule Membrane.Element.Pcap.Source.PipelineTest do
   use ExUnit.Case, async: false
 
-  alias Membrane.Testing
-  import Membrane.Testing.Pipeline.Assertions
+  alias Membrane.Testing.{Pipeline, Sink}
+  import Membrane.Testing.Assertions
 
   @tag time_consuming: true
   test "Pipeline does not crash when parsing small rtp stream" do
@@ -15,27 +15,24 @@ defmodule Membrane.Element.Pcap.Source.PipelineTest do
   test "Pipeline does not crash when parsing big RTP Stream" do
     expected_count = 47_942
     file = "test/support/fixtures/rtp_video_stream.pcap"
-
     process_file(file, expected_count)
   end
 
   defp process_file(file, expected_packets) do
-    options = %Testing.Pipeline.Options{
+    options = %Pipeline.Options{
       elements: [
         source: %Membrane.Element.Pcap.Source{path: file},
-        sink: %Membrane.Testing.Sink{target: self()}
-      ],
-      monitored_callbacks: [:handle_prepared_to_playing],
-      test_process: self()
+        sink: %Sink{}
+      ]
     }
 
-    {:ok, pid} = Testing.Pipeline.start_link(options)
+    {:ok, pid} = Pipeline.start_link(options)
 
-    Membrane.Pipeline.play(pid)
-    assert_receive_message(:handle_prepared_to_playing, 1000)
+    assert :ok = Membrane.Pipeline.play(pid)
+    assert_pipeline_playback_changed(pid, :prepared, :playing)
 
     Enum.each(1..expected_packets, fn _el ->
-      assert_receive %Membrane.Buffer{} = buffer, 1000
+      assert_sink_buffer(pid, :sink, %Membrane.Buffer{})
     end)
 
     Membrane.Pipeline.stop(pid)
