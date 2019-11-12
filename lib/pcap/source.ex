@@ -113,7 +113,7 @@ defmodule Membrane.Element.Pcap.Source do
 
   defp pack_fetched_packets(result)
 
-  defp pack_fetched_packets({:eof, []}), do: [event: {:output, %EndOfStream{}}]
+  defp pack_fetched_packets({:eof, []}), do: [end_of_stream: :output]
 
   defp pack_fetched_packets({:eof, buffers}),
     do: pack_fetched_packets(buffers) ++ pack_fetched_packets({:eof, []})

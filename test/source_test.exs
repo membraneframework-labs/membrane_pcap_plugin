@@ -64,7 +64,7 @@ defmodule Membrane.Element.Pcap.SourceTest do
         |> Enum.zip(base)
         |> Enum.each(fn {left, right} -> assert left.payload == right end)
 
-        assert Keyword.fetch!(actions, :event) == {:output, %Membrane.Event.EndOfStream{}}
+        assert Keyword.fetch!(actions, :end_of_stream) == :output
       end
     end
 
@@ -76,7 +76,7 @@ defmodule Membrane.Element.Pcap.SourceTest do
         state = %Source.State{state | transformer: ignore_all_transformer}
         assert {{:ok, actions}, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
         refute Keyword.has_key?(actions, :buffer)
-        assert {:output, %Membrane.Event.EndOfStream{}} = Keyword.fetch!(actions, :event)
+        assert :output = Keyword.fetch!(actions, :end_of_stream)
       end
     end
 
@@ -96,7 +96,7 @@ defmodule Membrane.Element.Pcap.SourceTest do
 
         assert actions == [
                  buffer: {:output, [%Membrane.Buffer{metadata: %{}, payload: 2}]},
-                 event: {:output, %Membrane.Event.EndOfStream{}}
+                 end_of_stream: :output
                ]
       end
     end
