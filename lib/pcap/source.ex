@@ -7,7 +7,6 @@ defmodule Membrane.Element.Pcap.Source do
   use Bunch
 
   alias Membrane.Buffer
-  alias Membrane.Event.EndOfStream
   alias Membrane.Element.Pcap.Parser
   alias ExPcap.Packet
 
