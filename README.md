@@ -15,7 +15,7 @@ The package can be installed by adding `membrane_element_pcap` to your list of d
 ```elixir
 def deps do
   [
-    {:membrane_element_pcap, "~> 0.1.0"}
+    {:membrane_element_pcap, "~> 0.4.0"}
   ]
 end
 ```
