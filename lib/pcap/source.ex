@@ -45,10 +45,11 @@ defmodule Membrane.Element.Pcap.Source do
 
   @impl true
   def handle_init(%__MODULE__{path: path, packet_transformer: transformer}) do
-    {:ok, %State{
-      path: path,
-      transformer: transformer
-    }}
+    {:ok,
+     %State{
+       path: path,
+       transformer: transformer
+     }}
   end
 
   @impl true
@@ -73,9 +74,9 @@ defmodule Membrane.Element.Pcap.Source do
       {:error, _} = error ->
         {error, state}
 
-        result ->
-          {{:ok, pack_fetched_packets(result)}, state}
-      end
+      result ->
+        {{:ok, pack_fetched_packets(result)}, state}
+    end
   end
 
   @spec default_transformer(Packet.t()) :: Buffer.t()
