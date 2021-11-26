@@ -25,7 +25,7 @@ defmodule Membrane.Element.Pcap.Parser do
         global_header: global_header,
         file: file
       }
-      ~> {:ok, &1}
+      |> then(&{:ok, &1})
     else
       {:error, _} = error -> error
     end
@@ -48,7 +48,7 @@ defmodule Membrane.Element.Pcap.Parser do
         raw_packet_data: packet_data,
         parsed_packet_data: parsed_data
       }
-      ~> {:ok, &1}
+      |> then(&{:ok, &1})
     else
       :eof ->
         {:ok, :eof}

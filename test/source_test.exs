@@ -46,7 +46,7 @@ defmodule Membrane.Element.Pcap.SourceTest do
       next_packet = fn _ ->
         Agent.get_and_update(store, fn value ->
           Enum.split(value, 1)
-          ~> ({[value], rest} -> {value, rest})
+          |> then(fn {[value], rest} -> {value, rest} end)
         end)
       end
 

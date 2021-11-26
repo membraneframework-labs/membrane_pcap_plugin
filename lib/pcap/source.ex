@@ -49,7 +49,7 @@ defmodule Membrane.Element.Pcap.Source do
       path: path,
       transformer: transformer
     }
-    ~> {:ok, &1}
+    |> then(&{:ok, &1})
   end
 
   @impl true
@@ -72,15 +72,15 @@ defmodule Membrane.Element.Pcap.Source do
 
     size
     |> fetch_packets(parser, transformer)
-    ~> (
+    |> then(fn
       {:error, _} = error ->
         {error, state}
 
       result ->
         result
         |> pack_fetched_packets()
-        ~> {{:ok, &1}, state}
-    )
+        |> then(&{{:ok, &1}, state})
+    end)
   end
 
   @spec default_transformer(Packet.t()) :: Buffer.t()
@@ -118,5 +118,5 @@ defmodule Membrane.Element.Pcap.Source do
     do: pack_fetched_packets(buffers) ++ pack_fetched_packets({:eof, []})
 
   defp pack_fetched_packets(buffers) when is_list(buffers),
-    do: buffers |> Enum.reverse() ~> [buffer: {:output, &1}]
+    do: buffers |> Enum.reverse() |> then(&[buffer: {:output, &1}])
 end
