@@ -21,11 +21,11 @@ defmodule Membrane.Element.Pcap.Parser do
     with {:ok, file} <- File.open(path, [:read, :binary]),
          %MagicNumber{} = magic_number <- MagicNumber.from_file(file),
          %GlobalHeader{} = global_header <- GlobalHeader.from_file(file, magic_number) do
-      %__MODULE__{
-        global_header: global_header,
-        file: file
-      }
-      ~> {:ok, &1}
+      {:ok,
+       %__MODULE__{
+         global_header: global_header,
+         file: file
+       }}
     else
       {:error, _} = error -> error
     end
@@ -43,12 +43,12 @@ defmodule Membrane.Element.Pcap.Parser do
     with %PacketHeader{} = packet_header <- PacketHeader.from_file(file, global_header),
          %PacketData{} = packet_data <- PacketData.from_file(file, global_header, packet_header),
          {:ok, parsed_data} <- :pkt.decode(:ether, packet_data.data) do
-      %Packet{
-        packet_header: packet_header,
-        raw_packet_data: packet_data,
-        parsed_packet_data: parsed_data
-      }
-      ~> {:ok, &1}
+      {:ok,
+       %Packet{
+         packet_header: packet_header,
+         raw_packet_data: packet_data,
+         parsed_packet_data: parsed_data
+       }}
     else
       :eof ->
         {:ok, :eof}

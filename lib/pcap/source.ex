@@ -45,11 +45,11 @@ defmodule Membrane.Element.Pcap.Source do
 
   @impl true
   def handle_init(%__MODULE__{path: path, packet_transformer: transformer}) do
-    %State{
-      path: path,
-      transformer: transformer
-    }
-    ~> {:ok, &1}
+    {:ok,
+     %State{
+       path: path,
+       transformer: transformer
+     }}
   end
 
   @impl true
@@ -70,17 +70,13 @@ defmodule Membrane.Element.Pcap.Source do
   def handle_demand(:output, size, :buffers, _ctx, state) do
     %State{parser: parser, transformer: transformer} = state
 
-    size
-    |> fetch_packets(parser, transformer)
-    ~> (
+    case fetch_packets(size, parser, transformer) do
       {:error, _} = error ->
         {error, state}
 
       result ->
-        result
-        |> pack_fetched_packets()
-        ~> {{:ok, &1}, state}
-    )
+        {{:ok, pack_fetched_packets(result)}, state}
+    end
   end
 
   @spec default_transformer(Packet.t()) :: Buffer.t()
@@ -118,5 +114,5 @@ defmodule Membrane.Element.Pcap.Source do
     do: pack_fetched_packets(buffers) ++ pack_fetched_packets({:eof, []})
 
   defp pack_fetched_packets(buffers) when is_list(buffers),
-    do: buffers |> Enum.reverse() ~> [buffer: {:output, &1}]
+    do: [buffer: {:output, Enum.reverse(buffers)}]
 end

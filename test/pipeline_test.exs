@@ -11,6 +11,9 @@ defmodule Membrane.Element.Pcap.Source.PipelineTest do
     process_file(file, expected_count)
   end
 
+  #! Requires Git Large File Storage
+  #! `brew install git-lfs`
+  #! then clone this repo to download files
   @tag time_consuming: true
   test "Pipeline does not crash when parsing big RTP Stream" do
     expected_count = 47_942
@@ -35,6 +38,6 @@ defmodule Membrane.Element.Pcap.Source.PipelineTest do
       assert_sink_buffer(pid, :sink, %Membrane.Buffer{})
     end)
 
-    Membrane.Pipeline.stop(pid)
+    Membrane.Pipeline.stop_and_terminate(pid, blocking?: true)
   end
 end

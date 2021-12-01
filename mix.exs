@@ -8,7 +8,7 @@ defmodule Membrane.Element.Pcap.MixProject do
     [
       app: :membrane_element_pcap,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       description: "Membrane Multimedia Framework (Pcap Element)",
@@ -30,7 +30,7 @@ defmodule Membrane.Element.Pcap.MixProject do
 
   def application do
     [
-      extra_applications: []
+      extra_applications: [:pkt]
     ]
   end
 
@@ -65,9 +65,9 @@ defmodule Membrane.Element.Pcap.MixProject do
   defp deps do
     [
       {:membrane_core, "~> 0.8.0"},
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.4", only: [:dev], runtime: false},
-      {:expcap, github: "Hajto/expcap"},
+      {:ex_doc, "~> 0.26", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.1.0", only: [:dev], runtime: false},
+      {:ex_pcap, github: "membraneframework/expcap"},
       {:mock, "~> 0.3.0", only: :test}
     ]
   end
