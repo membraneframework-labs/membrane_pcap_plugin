@@ -1,12 +1,12 @@
-defmodule Membrane.Element.Pcap.MixProject do
+defmodule Membrane.Pcap.MixProject do
   use Mix.Project
 
-  @version "0.4.0"
-  @github_url "https://github.com/membraneframework/membrane-element-pcap"
+  @version "0.5.0"
+  @github_url "https://github.com/membraneframework/membrane_pcap_plugin"
 
   def project do
     [
-      app: :membrane_element_pcap,
+      app: :membrane_pcap_plugin,
       version: @version,
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -64,7 +64,7 @@ defmodule Membrane.Element.Pcap.MixProject do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.8.0"},
+      {:membrane_core, "~> 0.9.0"},
       {:ex_doc, "~> 0.26", only: :dev, runtime: false},
       {:dialyxir, "~> 1.1.0", only: [:dev], runtime: false},
       {:ex_pcap, github: "membraneframework/expcap"},

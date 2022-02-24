@@ -1,2 +1,2 @@
-test/support/fixtures/rtp_video_stream.pcap filter=lfs diff=lfs merge=lfs -text
-test/support/fixtures/demo.pcap filter=lfs diff=lfs merge=lfs -text
+test/fixtures/rtp_video_stream.pcap filter=lfs diff=lfs merge=lfs -text
+test/fixtures/demo.pcap filter=lfs diff=lfs merge=lfs -text
