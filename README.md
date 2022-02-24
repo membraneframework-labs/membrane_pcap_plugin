@@ -1,26 +1,24 @@
-# Membrane Multimedia Framework: Pcap
+# Membrane PCAP plugin
 
-[![CircleCI](https://circleci.com/gh/membraneframework/membrane-element-pcap.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane-element-pcap)
+[![CircleCI](https://circleci.com/gh/membraneframework/membrane_pcap_plugin.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane_pcap_plugin)
 
-## Warning: this element is experimental!
+## Warning: this package is experimental!
 
-This package provides elements that can be used for reading files in `pcap` format.
+This package provides the PCAP source, capable of reading files in `pcap` format.
 
 It is part of [Membrane Multimedia Framework](https://membraneframework.org).
 
 ## Installation
 
-The package can be installed by adding `membrane_element_pcap` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `membrane_pcap_plugin` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:membrane_element_pcap, "~> 0.4.0"}
+    {:membrane_pcap_plugin, github: "membraneframework/membrane_pcap_plugin", tag: "v0.5.0"}
   ]
 end
 ```
-
-The docs can be found at [HexDocs](https://hexdocs.pm/membrane_element_pcap).
 
 ## Copyright and License
 
