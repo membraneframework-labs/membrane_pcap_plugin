@@ -1,7 +1,7 @@
 defmodule Membrane.Pcap.MixProject do
   use Mix.Project
 
-  @version "0.6.0"
+  @version "0.5.0"
   @github_url "https://github.com/membraneframework/membrane_pcap_plugin"
 
   def project do
@@ -64,7 +64,7 @@ defmodule Membrane.Pcap.MixProject do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.10.0"},
+      {:membrane_core, "~> 0.9.0"},
       {:ex_doc, "~> 0.26", only: :dev, runtime: false},
       {:dialyxir, "~> 1.1.0", only: [:dev], runtime: false},
       {:ex_pcap, github: "membraneframework/expcap"},
