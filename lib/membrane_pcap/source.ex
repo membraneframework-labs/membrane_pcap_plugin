@@ -8,12 +8,13 @@ defmodule Membrane.Pcap.Source do
 
   alias Membrane.Buffer
   alias Membrane.Pcap.Parser
+  alias Membrane.RemoteStream
   alias ExPcap.Packet
 
   @next_packet &Parser.next_packet/1
 
   def_output_pad :output,
-    caps: :any
+    caps: {RemoteStream, type: :packetized, content_format: nil}
 
   def_options packet_transformer: [
                 type: :function,
@@ -55,8 +56,12 @@ defmodule Membrane.Pcap.Source do
   @impl true
   def handle_prepared_to_playing(_context, %State{path: path} = state) do
     case Parser.from_file(path) do
-      {:ok, parser} -> {:ok, %State{state | parser: parser}}
-      {:error, _} = error -> {error, state}
+      {:ok, parser} ->
+        caps = {:caps, {:output, %RemoteStream{type: :packetized}}}
+        {{:ok, [caps]}, %State{state | parser: parser}}
+
+      {:error, _} = error ->
+        {error, state}
     end
   end
 
