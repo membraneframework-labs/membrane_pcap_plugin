@@ -13,7 +13,9 @@ defmodule Membrane.Pcap.SourceTest do
   describe "Pcap Source element when handling prepared to playing should" do
     test "update state with open parser on success", %{state: state} do
       with_mock Parser, from_file: fn _ -> {:ok, :parser} end do
-        assert {:ok, %State{state | parser: :parser}} ==
+        assert {{:ok,
+                 [caps: {:output, %Membrane.RemoteStream{content_format: nil, type: :packetized}}]},
+                %State{state | parser: :parser}} ==
                  Source.handle_prepared_to_playing(nil, state)
 
         assert_called(Parser.from_file(state.path))
