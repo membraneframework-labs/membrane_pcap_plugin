@@ -1,7 +1,7 @@
 defmodule Membrane.Pcap.MixProject do
   use Mix.Project
 
-  @version "0.6.0"
+  @version "0.6.1"
   @github_url "https://github.com/membraneframework/membrane_pcap_plugin"
 
   def project do
