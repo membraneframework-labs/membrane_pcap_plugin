@@ -55,7 +55,7 @@ defmodule Membrane.Pcap.Source do
   @impl true
   def handle_prepared_to_playing(_context, %State{path: path} = state) do
     case Parser.from_file(path) do
-      {:ok, parser} -> {:ok, %State{state | parser: parser}}
+      {:ok, parser} -> {{:ok, caps: {:output, %Membrane.RemoteStream{type: :packetized}}}, %State{state | parser: parser}}
       {:error, _} = error -> {error, state}
     end
   end
