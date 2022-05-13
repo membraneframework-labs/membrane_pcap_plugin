@@ -1,4 +1,6 @@
 defmodule Membrane.Support.TestPacket do
+  @moduledoc false
+
   @spec path() :: binary()
   def path, do: Path.join(["test", "fixtures", "one_packet.pcap"])
 
