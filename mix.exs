@@ -35,7 +35,6 @@ defmodule Membrane.Pcap.MixProject do
     ]
   end
 
-
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_env), do: ["lib"]
 
