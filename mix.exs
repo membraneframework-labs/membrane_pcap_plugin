@@ -67,7 +67,7 @@ defmodule Membrane.Pcap.MixProject do
       {:membrane_core, "~> 0.10.0"},
       {:ex_doc, "~> 0.26", only: :dev, runtime: false},
       {:dialyxir, "~> 1.1.0", only: [:dev], runtime: false},
-      {:ex_pcap, github: "membraneframework/expcap"},
+      {:ex_pcap, github: "membraneframework-labs/expcap"},
       {:mock, "~> 0.3.0", only: :test}
     ]
   end
