@@ -6,10 +6,10 @@ defmodule Membrane.Pcap.Source do
   use Membrane.Source
   use Bunch
 
+  alias ExPcap.Packet
   alias Membrane.Buffer
   alias Membrane.Pcap.Parser
   alias Membrane.RemoteStream
-  alias ExPcap.Packet
 
   @next_packet &Parser.next_packet/1
 

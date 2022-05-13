@@ -2,11 +2,11 @@ defmodule Membrane.Pcap.Parser do
   @moduledoc """
   This module is responsible for parsing `.pcap` files.
   """
+  use Bunch
+  alias ExPcap.{GlobalHeader, MagicNumber, Packet, PacketData, PacketHeader}
+
   @enforce_keys [:file, :global_header]
   defstruct @enforce_keys
-  use Bunch
-
-  alias ExPcap.{Packet, PacketData, PacketHeader, MagicNumber, GlobalHeader}
 
   @type t :: %__MODULE__{
           file: IO.device(),

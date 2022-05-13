@@ -3,7 +3,7 @@ defmodule Membrane.Pcap.SourceTest do
   use Bunch
   import Mock
 
-  alias Membrane.Pcap.{Source, Parser}
+  alias Membrane.Pcap.{Parser, Source}
   alias Source.State
 
   setup do

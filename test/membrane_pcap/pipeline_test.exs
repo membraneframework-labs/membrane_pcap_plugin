@@ -1,8 +1,8 @@
 defmodule Membrane.Pcap.Source.PipelineTest do
   use ExUnit.Case, async: false
 
-  alias Membrane.Testing.{Pipeline, Sink}
   import Membrane.Testing.Assertions
+  alias Membrane.Testing.{Pipeline, Sink}
 
   @tag time_consuming: true
   test "Pipeline does not crash when parsing small rtp stream" do

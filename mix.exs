@@ -18,6 +18,7 @@ defmodule Membrane.Pcap.MixProject do
       docs: docs(),
       homepage_url: "https://membraneframework.org",
       deps: deps(),
+      dialyzer: dialyzer(),
       aliases: aliases(),
       preferred_cli_env: [
         "test.short": :test
@@ -34,21 +35,31 @@ defmodule Membrane.Pcap.MixProject do
     ]
   end
 
-  def aliases do
-    [
-      "test.short": "test --exclude time_consuming:true"
-    ]
-  end
-
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_env), do: ["lib"]
 
-  defp docs do
+  defp deps do
     [
-      main: "readme",
-      extras: ["README.md"],
-      source_ref: "v#{@version}"
+      {:membrane_core, "~> 0.10.0"},
+      {:ex_doc, "~> 0.26", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.1.0", only: [:dev], runtime: false},
+      {:credo, ">= 0.0.0", only: :dev, runtime: false},
+      {:ex_pcap, github: "membraneframework-labs/expcap"},
+      {:mock, "~> 0.3.0", only: :test}
     ]
+  end
+
+  defp dialyzer() do
+    opts = [
+      flags: [:error_handling]
+    ]
+
+    if System.get_env("CI") == "true" do
+      # Store PLTs in cacheable directory for CI
+      [plt_local_path: "priv/plts", plt_core_path: "priv/plts"] ++ opts
+    else
+      opts
+    end
   end
 
   defp package do
@@ -62,13 +73,17 @@ defmodule Membrane.Pcap.MixProject do
     ]
   end
 
-  defp deps do
+  defp docs do
     [
-      {:membrane_core, "~> 0.10.0"},
-      {:ex_doc, "~> 0.26", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.1.0", only: [:dev], runtime: false},
-      {:ex_pcap, github: "membraneframework/expcap"},
-      {:mock, "~> 0.3.0", only: :test}
+      main: "readme",
+      extras: ["README.md"],
+      source_ref: "v#{@version}"
+    ]
+  end
+
+  def aliases do
+    [
+      "test.short": "test --exclude time_consuming:true"
     ]
   end
 end
