@@ -9,15 +9,15 @@ defmodule Membrane.Pcap.Source do
   alias Membrane.Buffer
   alias Membrane.Pcap.Parser
   alias Membrane.RemoteStream
+  alias Membrane.ResourceGuard
   alias ExPcap.Packet
 
   @next_packet &Parser.next_packet/1
 
   def_output_pad :output,
-    caps: {RemoteStream, type: :packetized, content_format: nil}
+    accepted_format: %RemoteStream{type: :packetized, content_format: nil}
 
   def_options packet_transformer: [
-                type: :function,
                 spec: (Packet.t() -> Buffer.t() | nil),
                 default: &__MODULE__.default_transformer/1,
                 description: """
@@ -45,8 +45,8 @@ defmodule Membrane.Pcap.Source do
   end
 
   @impl true
-  def handle_init(%__MODULE__{path: path, packet_transformer: transformer}) do
-    {:ok,
+  def handle_init(_ctx, %__MODULE__{path: path, packet_transformer: transformer}) do
+    {[],
      %State{
        path: path,
        transformer: transformer
@@ -54,21 +54,21 @@ defmodule Membrane.Pcap.Source do
   end
 
   @impl true
-  def handle_prepared_to_playing(_context, %State{path: path} = state) do
+  def handle_playing(ctx, %State{path: path} = state) do
     case Parser.from_file(path) do
       {:ok, parser} ->
-        caps = {:caps, {:output, %RemoteStream{type: :packetized}}}
-        {{:ok, [caps]}, %State{state | parser: parser}}
+        ResourceGuard.register(
+          ctx.resource_guard,
+          fn -> Parser.destroy(parser) end,
+          tag: {:path, path}
+        )
 
-      {:error, _} = error ->
-        {error, state}
+        actions = [stream_format: {:output, %RemoteStream{type: :packetized}}]
+        {actions, %State{state | parser: parser}}
+
+      {:error, reason} ->
+        raise "Calling Membrane.Pcap.Parser.from_file(#{inspect(path)}) returned an error with reason: #{inspect(reason)}"
     end
-  end
-
-  @impl true
-  def handle_prepared_to_stopped(_context, %State{parser: parser} = state) do
-    Parser.destroy(parser)
-    {:ok, %State{state | parser: nil}}
   end
 
   @impl true
@@ -76,17 +76,18 @@ defmodule Membrane.Pcap.Source do
     %State{parser: parser, transformer: transformer} = state
 
     case fetch_packets(size, parser, transformer) do
-      {:error, _} = error ->
-        {error, state}
+      {:error, reason} ->
+        raise "Fetching packets failed with error reason: #{inspect(reason)}"
 
       result ->
-        {{:ok, pack_fetched_packets(result)}, state}
+        {pack_fetched_packets(result), state}
     end
   end
 
-  @spec default_transformer(Packet.t()) :: Buffer.t()
-  def default_transformer(%ExPcap.Packet{parsed_packet_data: {_, payload}}),
-    do: %Buffer{payload: payload}
+  @spec default_transformer(ExPcap.Packet.t()) :: Buffer.t()
+  def default_transformer(%ExPcap.Packet{parsed_packet_data: {_, payload}}) do
+    %Buffer{payload: payload}
+  end
 
   # Note: Will return buffers in reversed order
   defp fetch_packets(count, parser, transformer, acc \\ [])
@@ -100,7 +101,7 @@ defmodule Membrane.Pcap.Source do
       {:ok, :eof} ->
         {:eof, acc}
 
-      {:ok, %Packet{} = packet} ->
+      {:ok, %ExPcap.Packet{} = packet} ->
         case transformer.(packet) do
           nil ->
             fetch_packets(count, parser, transformer, acc)

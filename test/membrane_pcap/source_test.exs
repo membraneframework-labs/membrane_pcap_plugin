@@ -1,38 +1,45 @@
 defmodule Membrane.Pcap.SourceTest do
   use ExUnit.Case
   use Bunch
+
+  import Membrane.Testing.Assertions
   import Mock
 
   alias Membrane.Pcap.{Source, Parser}
+  alias Membrane.Testing.MockResourceGuard
   alias Source.State
 
   setup do
-    [state: %State{path: "some_location.pcap", transformer: &Source.default_transformer/1}]
+    {:ok, resource_guard} = MockResourceGuard.start_link()
+
+    state = %State{path: "some_location.pcap", transformer: &Source.default_transformer/1}
+    ctx = %{resource_guard: resource_guard}
+
+    [state: state, ctx: ctx]
   end
 
   describe "Pcap Source element when handling prepared to playing should" do
-    test "update state with open parser on success", %{state: state} do
-      with_mock Parser, from_file: fn _ -> {:ok, :parser} end do
-        caps = [caps: {:output, %Membrane.RemoteStream{type: :packetized}}]
+    test "update state with open parser on success", %{state: state, ctx: ctx} do
+      with_mock Parser, from_file: fn _ -> {:ok, :parser} end, destroy: fn _ -> :ok end do
+        actions = [stream_format: {:output, %Membrane.RemoteStream{type: :packetized}}]
 
-        assert {{:ok, caps}, %State{state | parser: :parser}} ==
-                 Source.handle_prepared_to_playing(nil, state)
+        assert {actions, %State{state | parser: :parser}} ==
+                 Source.handle_playing(ctx, state)
 
         assert_called(Parser.from_file(state.path))
+
+        tag = {:path, state.path}
+        assert_resource_guard_register(ctx.resource_guard, cleanup_function, ^tag)
+
+        cleanup_function.()
+        assert_called(Parser.destroy(:parser))
       end
     end
 
-    test "return an error if it fails to open file", %{state: state} do
-      assert {{:error, :enoent}, ^state} = Source.handle_prepared_to_playing(nil, state)
-    end
-  end
-
-  test "Pcap Source element when handling prepared to stopped should destroy open parser", %{
-    state: state
-  } do
-    with_mock Parser, destroy: fn _ -> :ok end do
-      Source.handle_prepared_to_stopped(nil, %State{state | parser: :parser})
-      assert_called(Parser.destroy(:parser))
+    test "raises an error if it fails to open file", %{state: state, ctx: ctx} do
+      assert_raise RuntimeError,
+                   ~r/Calling.*Membrane.*Pcap.*Parser.*from_file.*returned.*an.*error.*with.*reason.*enoent/,
+                   fn -> Source.handle_playing(ctx, state) end
     end
   end
 
@@ -58,7 +65,7 @@ defmodule Membrane.Pcap.SourceTest do
     test "should return event end of stream when eof is sent as last action",
          %{state: state, next_packet: next_packet, base: base} do
       with_mock Parser, next_packet: next_packet do
-        assert {{:ok, actions}, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
+        assert {actions, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
         assert length(actions) == 2
         assert {:output, buffers} = Keyword.fetch!(actions, :buffer)
 
@@ -76,7 +83,7 @@ defmodule Membrane.Pcap.SourceTest do
 
       with_mock Parser, next_packet: next_packet do
         state = %Source.State{state | transformer: ignore_all_transformer}
-        assert {{:ok, actions}, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
+        assert {actions, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
         refute Keyword.has_key?(actions, :buffer)
         assert :output = Keyword.fetch!(actions, :end_of_stream)
       end
@@ -94,7 +101,7 @@ defmodule Membrane.Pcap.SourceTest do
 
       with_mock Parser, next_packet: next_packet do
         state = %Source.State{state | transformer: ignore_even_buffers}
-        assert {{:ok, actions}, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
+        assert {actions, ^state} = Source.handle_demand(:output, 4, :buffers, nil, state)
 
         assert actions == [
                  buffer: {:output, [%Membrane.Buffer{metadata: %{}, payload: 2}]},
