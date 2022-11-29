@@ -89,8 +89,8 @@ defmodule Membrane.Pcap.Source do
     end
   end
 
-  @spec default_transformer(ExPcap.Packet.t()) :: Buffer.t()
-  def default_transformer(%ExPcap.Packet{parsed_packet_data: {_, payload}}) do
+  @spec default_transformer(Packet.t()) :: Buffer.t()
+  def default_transformer(%Packet{parsed_packet_data: {_, payload}}) do
     %Buffer{payload: payload}
   end
 
@@ -106,7 +106,7 @@ defmodule Membrane.Pcap.Source do
       {:ok, :eof} ->
         {:eof, acc}
 
-      {:ok, %ExPcap.Packet{} = packet} ->
+      {:ok, %Packet{} = packet} ->
         case transformer.(packet) do
           nil ->
             fetch_packets(count, parser, transformer, acc)
