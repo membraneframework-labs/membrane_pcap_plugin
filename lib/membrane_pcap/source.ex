@@ -54,7 +54,7 @@ defmodule Membrane.Pcap.Source do
   end
 
   @impl true
-  def handle_playing(ctx, %State{path: path} = state) do
+  def handle_setup(ctx, %State{path: path} = state) do
     case Parser.from_file(path) do
       {:ok, parser} ->
         ResourceGuard.register(
@@ -63,12 +63,17 @@ defmodule Membrane.Pcap.Source do
           tag: {:path, path}
         )
 
-        actions = [stream_format: {:output, %RemoteStream{type: :packetized}}]
-        {actions, %State{state | parser: parser}}
+        {[], %State{state | parser: parser}}
 
       {:error, reason} ->
         raise "Calling Membrane.Pcap.Parser.from_file(#{inspect(path)}) returned an error with reason: #{inspect(reason)}"
     end
+  end
+
+  @impl true
+  def handle_playing(_ctx, state) do
+    actions = [stream_format: {:output, %RemoteStream{type: :packetized}}]
+    {actions, state}
   end
 
   @impl true

@@ -18,12 +18,16 @@ defmodule Membrane.Pcap.SourceTest do
     [state: state, ctx: ctx]
   end
 
-  describe "Pcap Source element when handling prepared to playing should" do
+  describe "Pcap Source element when handling setup and playing should" do
     test "update state with open parser on success", %{state: state, ctx: ctx} do
       with_mock Parser, from_file: fn _ -> {:ok, :parser} end, destroy: fn _ -> :ok end do
         actions = [stream_format: {:output, %Membrane.RemoteStream{type: :packetized}}]
 
-        assert {actions, %State{state | parser: :parser}} ==
+        assert {[], state} = Source.handle_setup(ctx, state)
+
+        assert %State{parser: :parser} = state
+
+        assert {actions, state} ==
                  Source.handle_playing(ctx, state)
 
         assert_called(Parser.from_file(state.path))
@@ -36,10 +40,10 @@ defmodule Membrane.Pcap.SourceTest do
       end
     end
 
-    test "raises an error if it fails to open file", %{state: state, ctx: ctx} do
+    test "raise an error if it fails to open file", %{state: state, ctx: ctx} do
       assert_raise RuntimeError,
                    ~r/Calling.*Membrane.*Pcap.*Parser.*from_file.*returned.*an.*error.*with.*reason.*enoent/,
-                   fn -> Source.handle_playing(ctx, state) end
+                   fn -> Source.handle_setup(ctx, state) end
     end
   end
 
