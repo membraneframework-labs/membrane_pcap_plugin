@@ -1,8 +1,10 @@
 defmodule Membrane.Pcap.Source.PipelineTest do
   use ExUnit.Case, async: false
 
-  alias Membrane.Testing.{Pipeline, Sink}
   import Membrane.Testing.Assertions
+  import Membrane.ChildrenSpec
+
+  alias Membrane.Testing.{Pipeline, Sink}
 
   @tag time_consuming: true
   test "Pipeline does not crash when parsing small rtp stream" do
@@ -22,16 +24,14 @@ defmodule Membrane.Pcap.Source.PipelineTest do
   end
 
   defp process_file(file, expected_packets) do
-    options = %Pipeline.Options{
-      elements: [
-        source: %Membrane.Pcap.Source{path: file},
-        sink: %Sink{}
-      ]
-    }
+    structure = [
+      child(:source, %Membrane.Pcap.Source{path: file})
+      |> child(:sink, Sink)
+    ]
 
-    {:ok, pid} = Pipeline.start_link(options)
+    {:ok, _supervisor_pid, pid} = Pipeline.start_link(structure: structure)
 
-    assert_pipeline_playback_changed(pid, :prepared, :playing)
+    assert_pipeline_play(pid)
 
     Enum.each(1..expected_packets, fn _el ->
       assert_sink_buffer(pid, :sink, %Membrane.Buffer{})
