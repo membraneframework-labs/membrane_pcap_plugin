@@ -15,7 +15,7 @@ The package can be installed by adding `membrane_pcap_plugin` to your list of de
 ```elixir
 def deps do
   [
-	  {:membrane_pcap_plugin, github: "membraneframework/membrane_pcap_plugin", tag: "v0.8.0"}
+	  {:membrane_pcap_plugin, github: "membraneframework/membrane_pcap_plugin", tag: "v0.9.0"}
   ]
 end
 ```

@@ -31,12 +31,10 @@ defmodule Membrane.Pcap.Source.PipelineTest do
 
     {:ok, _supervisor_pid, pid} = Pipeline.start_link(structure: structure)
 
-    assert_pipeline_play(pid)
-
     Enum.each(1..expected_packets, fn _el ->
       assert_sink_buffer(pid, :sink, %Membrane.Buffer{})
     end)
 
-    Membrane.Pipeline.terminate(pid, blocking?: true)
+    Membrane.Pipeline.terminate(pid)
   end
 end

@@ -15,7 +15,8 @@ defmodule Membrane.Pcap.Source do
   @next_packet &Parser.next_packet/1
 
   def_output_pad :output,
-    accepted_format: %RemoteStream{type: :packetized, content_format: nil}
+    accepted_format: %RemoteStream{type: :packetized, content_format: nil},
+    flow_control: :manual
 
   def_options packet_transformer: [
                 spec: (Packet.t() -> Buffer.t() | nil),
